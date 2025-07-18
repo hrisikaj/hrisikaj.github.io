@@ -1,0 +1,786 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Ritz' Birthday Murdle</title>
+  <style>
+  body {
+    background-color: #fff7ea;
+    color: #000;
+    font-family: 'Georgia', serif;
+    padding: 2rem;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+
+  #timer {
+    position: fixed;
+    top: 10px;
+    left: 10px;
+    background-color: #fff7ea;
+    color: #000;
+    padding: 0.5rem 1rem;
+    border-radius: 8px;
+    font-family: 'Courier New', monospace;
+    font-size: 1rem;
+    z-index: 9999;
+    border: 2px solid #000;
+  }
+
+  h2, h3 {
+    font-family: 'Georgia', 'Garamond', serif;
+    color: #a8002c;
+  }
+
+  h4 {
+    color: #000;
+  }
+
+  p {
+    font-family: 'system-ui', sans-serif;
+    color: #000;
+  }
+
+  ul {
+    padding-left: 1.5rem;
+    color: #000;
+  }
+
+  .main-layout {
+    display: flex;
+    align-items: flex-start;
+    gap: 3rem;
+    width: 100%;
+    justify-content: center;
+  }
+
+  .sidebar-carousel-wrapper {
+    position: relative;
+    width: 500px;
+    padding: 50px;
+    overflow: hidden;
+    flex-shrink: 0;
+    background-color: #fff7ea;
+    color: #000;
+  }
+
+  .sidebar-carousel {
+    display: flex;
+    overflow-x: scroll;
+    scroll-behavior: smooth;
+    width: 100%;
+    height: 100%;
+    scrollbar-width: none;      /* Firefox */
+    -ms-overflow-style: none;   /* IE and Edge */
+  }
+
+  .sidebar-carousel::-webkit-scrollbar {
+    display: none;              /* Chrome, Safari, Opera */
+  }
+
+  .carousel-panel {
+    min-width: 100%;
+    max-width: 100%;
+    height: auto;
+    padding: 1rem;
+    box-sizing: border-box;
+    overflow-y: auto;
+    background: none;
+    color: #000;
+  }
+
+  .carousel-btn {
+    position: absolute;
+    top: 0;
+    bottom: 0;
+    width: 40px;
+    background-color: #a8002c;
+    color: #000;
+    border: 2px solid #000;
+    font-size: 1.5rem;
+    cursor: pointer;
+    z-index: 10;
+    border-radius: 8px;
+    transition: background 0.2s;
+  }
+
+  .carousel-btn.left {
+    left: 0;
+  }
+
+  .carousel-btn.right {
+    right: 0;
+  }
+
+  .carousel-btn:hover {
+    background-color: #e6e0d4;
+  }
+
+  .grid-container {
+    flex: 1 1 auto;
+    max-width: 720px;
+  }
+
+  .grid-row {
+    display: flex;
+    gap: 0rem;           /* reduced from 2rem */
+    margin-bottom: 0rem; /* reduced from 2rem */
+  }
+
+  .deduction-grid {
+    display: grid;
+    gap: 1px;
+    background-color: #000;
+  }
+
+  .deduction-grid div {
+    background-color: #fff7ea;
+    width: 30px;
+    height: 30px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 0.7rem;
+    color: #000;
+    border: 1px solid #000;
+  }
+
+  .deduction-grid .label {
+    background-color: #f6ecd9;
+    color: #000;
+    font-weight: bold;
+    user-select: none;
+    font-family: 'Georgia', serif;
+  }
+
+  .clickable {
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .red {
+    background-color: #a8002c !important;
+    color: #fff !important;
+  }
+
+  .green {
+    background-color: #2e7d32 !important;
+    color: #fff !important;
+  }
+
+  .purple {
+    background-color: #6a1b9a !important;
+    color: #fff !important;
+  }
+
+  select {
+    padding: 0.4rem;
+    border: 2px solid #000;
+    border-radius: 4px;
+    background-color: #fff7ea;
+    color: #000;
+    font-family: 'system-ui', sans-serif;
+  }
+
+  button {
+    background-color: #fff7ea;
+    color: #000;
+    padding: 0.5rem 1rem;
+    border: 2px solid #000;
+    border-radius: 4px;
+    cursor: pointer;
+    font-family: 'system-ui', sans-serif;
+    transition: background-color 0.2s ease;
+  }
+
+  button:hover {
+    background-color: #e6e0d4;
+  }
+
+  .clue.struck {
+    text-decoration: line-through;
+    color: #71677c;
+  }
+
+  .guess-panel {
+    margin-top: 2rem;
+    display: flex;
+    gap: 2rem;
+    justify-content: center;
+    flex-wrap: wrap;
+  }
+
+  .guess-panel div {
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+  }
+  </style>
+
+
+</head>
+<body>
+  <div id="timer">
+  <span id="timer-text">Time: 00:00</span>
+  <button id="pause-timer-btn" style="margin-left:10px; font-size:0.9rem; padding:2px 8px;">Pause</button>
+  <button id="refresh-timer-btn" style="margin-left:5px; font-size:0.9rem; padding:2px 8px;">Refresh</button>
+</div>
+  <h2>The Case of the Muddled Envelopes</h2>
+  <h4>A Murdle Lovingly Written by Isaiah Milkey</h4>
+
+  <div style="margin-bottom: 2rem; max-width: 600px; text-align: center;">
+    <p><strong>Case:</strong> Ritz waited excitedly to open everyone's letters on her 21st birthday, only to find that one of the guests had maliciously mixed up all the letters! She asks you to help her decipher the cruel prank, providing you the information below.</p>
+  </div>
+  <div style="margin-bottom: 2rem; max-width: 700px;">
+    <h3>Clues</h3>
+    <ul id="clues-list">
+      <li class="clue">The kitchen mysteriously smelled like oranges. No one could tell where the scent was coming from, though.</li>
+      <li class="clue">The green envelope belonged to someone with a short temper.</li>
+      <li class="clue">Chef Caroline either had a blue envelope or a shiny envelope.</li>
+      <li class="clue">The shiny envelope was not in the living room.</li>
+      <li class="clue">Someone short-tempered was in the master bedroom.</li>
+      <li class="clue">Royal Ritvik's envelope had a bag of chocolate chips in it.</li>
+      <li class="clue">A blonde hair was found in the bathroom sink.</li>
+      <li class="clue">Brother Bagel insisted his envelope smelled good, and you know he's a terrible liar.</li>
+      <li class="clue">Someone found a green envelope near a computer.</li>
+      <li class="clue">The heaviest envelope was in the bathroom.</li>
+      <li class="clue">Mr. Freeze was found in the guest bedroom, playing Roblox.</li>
+      <li class="clue">Either PBnJ were outside or Mr. Freeze had a shiny envelope.</li>
+      <li class="clue">The culprit most definitely committed the crime in the master bedroom.</li>
+    </ul>
+
+    <div class="guess-panel">
+        <div>
+          <label for="who-select">Who?</label><br />
+          <select id="who-select">
+            <option value="">--Select--</option>
+            <option>Mr. Freeze</option>
+            <option>Chef Caroline</option>
+            <option>Royal Ritvik</option>
+            <option>Captain Nick</option>
+            <option>Brother Bagel</option>
+            <option>PBnJ</option>
+          </select>
+        </div>
+        <div>
+          <label for="where-select">Where?</label><br />
+          <select id="where-select">
+            <option value="">--Select--</option>
+            <option>Guest Bedroom</option>
+            <option>Bathroom</option>
+            <option>Living Room</option>
+            <option>Master Bedroom</option>
+            <option>Kitchen</option>
+            <option>Balcony</option>
+          </select>
+        </div>
+        <div>
+          <label for="envelope-select">Which Envelope?</label><br />
+          <select id="envelope-select">
+            <option value="">--Select--</option>
+            <option>Blue</option>
+            <option>Orange</option>
+            <option>Green</option>
+            <option>Purple</option>
+            <option>Shiny</option>
+            <option>Yellow</option>
+          </select>
+        </div>
+        <div style="margin-top: 1rem;">
+          <button onclick="checkAnswers()">Check Answer</button>
+        </div>
+      </div>
+
+  </div>
+  <div class="main-layout">
+    <div class="sidebar-carousel-wrapper">
+      <button class="carousel-btn left" id="carousel-left-btn" onclick="scrollCarousel(-1)">&#8592;</button>
+      <div class="sidebar-carousel" id="carousel">
+        <div class="carousel-panel">
+          <h3>Suspects</h3>
+          <ul>
+            <li>
+              <strong>
+                <img src="suspects/mr_freeze.png" alt="Mr. Freeze" style="width:24px;height:24px;vertical-align:middle;" />
+                [Mr. Freeze]:
+              </strong>
+              <ul>
+                <li>AKA: Vinnie</li>
+                <li>World-renowned indie pop-star. He loves his music as much as he loves his protein.</li>
+                <li><strong>Traits:</strong> Easy-Going - Blonde Hair</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="suspects/chef_caroline.png" alt="Chef Caroline" style="width:24px;height:24px;vertical-align:middle;" />
+                [Chef Caroline]:
+              </strong>
+              <ul>
+                <li>AKA: Caroline</li>
+                <li>After school, she moved back to Chicago to take over the family business, which turned out to be a Michelin-starred restaurant.</li>
+                <li><strong>Traits:</strong> Short-tempered - Blonde Hair</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="suspects/royal_ritvik.png" alt="Royal Ritvik" style="width:24px;height:24px;vertical-align:middle;" />
+                [Royal Ritvik]:
+              </strong>
+              <ul>
+                <li>AKA: Ritvik</li>
+                <li>Turns out Ritvik was the heir to some kingdom this whole time!</li>
+                <li><strong>Traits:</strong> Greedy - Black Hair</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="suspects/captain_nick.png" alt="Captain Nick" style="width:24px;height:24px;vertical-align:middle;" />
+                [Captain Nick]:
+              </strong>
+              <ul>
+                <li>AKA: Nick</li>
+                <li>One day, he decided he wanted to sail the seas.</li>
+                <li><strong>Traits:</strong> Short tempered - Brown Hair</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="suspects/brother_bagel.png" alt="Brother Bagel" style="width:24px;height:24px;vertical-align:middle;" />
+                [Brother Bagel]:
+              </strong>
+              <ul>
+                <li>AKA: Arnav</li>
+                <li>Leader of an underground bagel cult.</li>
+                <li><strong>Traits:</strong> Easy-Going - Brown Hair</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="suspects/anj.png" alt="PBnJ" style="width:24px;height:24px;vertical-align:middle;" />
+                [PBnJ]:
+              </strong>
+              <ul>
+                <li>AKA: Adi and Jeffae</li>
+                <li>These inseparable rascals found themselves with a lot of money after moving to Seattle...</li>
+                <li><strong>Traits:</strong> Energetic - Dyed Hair</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="carousel-panel">
+          <h3>Envelopes</h3>
+          <ul>
+            <li>
+              <strong>
+                <img src="envelopes/blue_envelope.png" alt="Blue Envelope" style="width:24px;height:24px;vertical-align:middle;" />
+                Blue:
+              </strong>
+              <ul>
+                <li>Filled with strange coins.</li>
+                <li>Smooth.</li>
+                <li>Smells like a metal.</li>
+                <li>Weight: 10 grams</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="envelopes/orange_envelope.png" alt="Orange Envelope" style="width:24px;height:24px;vertical-align:middle;" />
+                Orange:
+              </strong>
+              <ul>
+                <li>Orange-scented stickers everywhere.</li>
+                <li>Smooth.</li>
+                <li>The scent was rubbed off?</li>
+                <li>Weight: 6 grams</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="envelopes/green_envelope.png" alt="Green Envelope" style="width:24px;height:24px;vertical-align:middle;" />
+                Green:
+              </strong>
+              <ul>
+                <li>There wasn't much to see here.</li>
+                <li>Smooth.</li>
+                <li>Smells like fresh laundry.</li>
+                <li>Weight: 3 grams</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="envelopes/purple_envelope.png" alt="Purple Envelope" style="width:24px;height:24px;vertical-align:middle;" />
+                Purple:
+              </strong>
+              <ul>
+                <li>Dang, this one has a lot of paper.</li>
+                <li>Smooth</li>
+                <li>Has a faint smell of chocolate.</li>
+                <li>Weight: 2 grams</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="envelopes/shiny_envelope.png" alt="Shiny Envelope" style="width:24px;height:24px;vertical-align:middle;" />
+                Shiny:
+              </strong>
+              <ul>
+                <li>Shinyyyyy</li>
+                <li>Rough.</li>
+                <li>Has no smell.</li>
+                <li>Weight: 5 grams</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="envelopes/yellow_envelope.png" alt="Yellow Envelope" style="width:24px;height:24px;vertical-align:middle;" />
+                Yellow:
+              </strong>
+              <ul>
+                <li>Warm.</li>
+                <li>Strangely soft too.</li>
+                <li>Has no smell.</li>
+                <li>Weight: 4 grams</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+        <div class="carousel-panel">
+          <h3>Locations</h3>
+          <ul>
+            <li>
+              <strong>
+                <img src="locations/gb.png" alt="Guest Bedroom" style="width:24px;height:24px;vertical-align:middle;" />
+                Guest Bedroom:
+              </strong>
+              <ul>
+                <li>Bed, desk, and computer</li>
+                <li>Indoors</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="locations/br.png" alt="Bathroom" style="width:24px;height:24px;vertical-align:middle;" />
+                Bathroom:
+              </strong>
+              <ul>
+                <li>Toilet, bathtub, sink. No shower?</li>
+                <li>Indoors</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="locations/lr.png" alt="Living Room" style="width:24px;height:24px;vertical-align:middle;" />
+                Living Room:
+              </strong>
+              <ul>
+                <li>Three sofas, two plants, one TV</li>
+                <li>Indoors</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="locations/mbr.png" alt="Master Bedroom" style="width:24px;height:24px;vertical-align:middle;" />
+                Master Bedroom:
+              </strong>
+              <ul>
+                <li>Full-sized bed, desk, and computer</li>
+                <li>Indoors</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="locations/kt.png" alt="Kitchen" style="width:24px;height:24px;vertical-align:middle;" />
+                Kitchen:
+              </strong>
+              <ul>
+                <li>Dining table, appliances, but no cupboards?</li>
+                <li>Indoors</li>
+              </ul>
+            </li>
+            <li>
+              <strong>
+                <img src="locations/bc.png" alt="Balcony" style="width:24px;height:24px;vertical-align:middle;" />
+                Balcony:
+              </strong>
+              <ul>
+                <li>Lawn chairs, litter box, small plant</li>
+                <li>Outdoors</li>
+              </ul>
+            </li>
+          </ul>
+        </div>
+      </div>
+      <button class="carousel-btn right" id="carousel-right-btn" onclick="scrollCarousel(1)">&#8594;</button>
+    </div>
+
+    <div class="grid-container">
+      <h3>Deduction Notebook</h3>
+
+      <div class="grid-row">
+        <!-- Grid 1 -->
+        <div class="deduction-grid" style="grid-template-columns: repeat(7, 30px);">
+          <div class="label"></div>
+          <div class="label"><img src="suspects/mr_freeze.png" alt="Mr. Freeze" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="suspects/chef_caroline.png" alt="Chef Caroline" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="suspects/royal_ritvik.png" alt="Royal Ritvik" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="suspects/captain_nick.png" alt="Captain Nick" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="suspects/brother_bagel.png" alt="Brother Bagel" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="suspects/anj.png" alt="PBnJ" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="envelopes/blue_envelope.png" alt="Blue Envelope" style="width:24px;height:24px;" /></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="envelopes/orange_envelope.png" alt="Orange Envelope" style="width:24px;height:24px;" /></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="envelopes/green_envelope.png" alt="Green Envelope" style="width:24px;height:24px;" /></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="envelopes/purple_envelope.png" alt="Purple Envelope" style="width:24px;height:24px;" /></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="envelopes/shiny_envelope.png" alt="Shiny Envelope" style="width:24px;height:24px;" /></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="envelopes/yellow_envelope.png" alt="Yellow Envelope" style="width:24px;height:24px;" /></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+        </div>
+
+        <!-- Grid 2 -->
+        <div class="deduction-grid" style="grid-template-columns: repeat(6, 30px);">
+          <div class="label"><img src="locations/gb.png" alt="Guest Bedroom" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="locations/br.png" alt="Bathroom" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="locations/lr.png" alt="Living Room" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="locations/mbr.png" alt="Master Bedroom" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="locations/kt.png" alt="Kitchen" style="width:24px;height:24px;" /></div>
+          <div class="label"><img src="locations/bc.png" alt="Balcony" style="width:24px;height:24px;" /></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+        </div>
+      </div>
+      
+      <div class="grid-row">
+        <!-- Grid 3 -->
+        <div class="deduction-grid" style="grid-template-columns: repeat(7, 30px);">
+          <div class="label"><img src="locations/gb.png" alt="Guest Bedroom" style="width:24px;height:24px;" /></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="locations/br.png" alt="Bathroom" style="width:24px;height:24px;" /></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="locations/lr.png" alt="Living Room" style="width:24px;height:24px;" /></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="locations/mbr.png" alt="Master Bedroom" style="width:24px;height:24px;" /></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="locations/kt.png" alt="Kitchen" style="width:24px;height:24px;" /></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+          <div class="label"><img src="locations/bc.png" alt="Balcony" style="width:24px;height:24px;" /></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div><div class="clickable"></div>
+        </div>
+      </div>
+
+    </div>
+  </div>
+
+  <script>
+    // Timer
+    let seconds = 0;
+    let timerInterval;
+    let paused = false;
+    
+    function updateTimer() {
+      seconds++;
+      const minutes = Math.floor(seconds / 60);
+      const remSeconds = seconds % 60;
+      document.getElementById("timer-text").textContent = `Time: ${String(minutes).padStart(2, '0')}:${String(remSeconds).padStart(2, '0')}`;
+    }
+    
+    timerInterval = setInterval(updateTimer, 1000);
+
+    document.getElementById('pause-timer-btn').onclick = function() {
+      paused = !paused;
+      if (paused) {
+        clearInterval(timerInterval);
+        this.textContent = "Resume";
+      } else {
+        timerInterval = setInterval(updateTimer, 1000);
+        this.textContent = "Pause";
+      }
+    };
+
+    document.getElementById('refresh-timer-btn').onclick = function() {
+      seconds = 0;
+      document.getElementById("timer-text").textContent = "Time: 00:00";
+      if (paused) {
+        paused = false;
+        document.getElementById('pause-timer-btn').textContent = "Pause";
+        timerInterval = setInterval(updateTimer, 1000);
+      }
+    };
+    // Carousel scroll logic
+    let currentPanel = 0;
+    const carousel = document.getElementById('carousel');
+    const totalPanels = carousel.children.length;
+    const leftBtn = document.getElementById('carousel-left-btn');
+    const rightBtn = document.getElementById('carousel-right-btn');
+
+    function updateCarouselButtons() {
+      leftBtn.style.display = currentPanel === 0 ? 'none' : '';
+      rightBtn.style.display = currentPanel === totalPanels - 1 ? 'none' : '';
+    }
+
+    // Initial button state
+    updateCarouselButtons();
+
+    function scrollCarousel(direction) {
+      currentPanel += direction;
+      if (currentPanel < 0) currentPanel = 0;
+      if (currentPanel >= totalPanels) currentPanel = totalPanels - 1;
+      carousel.scrollTo({
+        left: carousel.clientWidth * currentPanel,
+        behavior: 'smooth'
+      });
+      updateCarouselButtons();
+    }
+
+    // Clue strikethrough toggle
+    const clues = document.querySelectorAll('.clue');
+    clues.forEach(clue => {
+      clue.addEventListener('click', () => {
+        clue.classList.toggle('struck');
+      });
+    });
+
+    // Deduction grid clickable cells cycling colors: none -> red -> green -> purple -> none
+    const colors = ['', 'red', 'green', 'purple'];
+    function cycleColor(el) {
+      const currentColor = el.className.includes('red') ? 'red' :
+                           el.className.includes('green') ? 'green' :
+                           el.className.includes('purple') ? 'purple' : '';
+      let nextIndex = colors.indexOf(currentColor) + 1;
+      if (nextIndex >= colors.length) nextIndex = 0;
+      el.classList.remove('red','green','purple');
+      if (colors[nextIndex] !== '') el.classList.add(colors[nextIndex]);
+      handleColorLogic(el, colors[nextIndex]);
+    }
+
+    // When a green cell is clicked, all cells in same row and white cells in same column turn dark red.
+    // If the cell is not green, revert those dark red cells back to white.
+    function handleColorLogic(cell, color) {
+      const grid = cell.parentElement.parentElement;
+      const index = Array.from(grid.querySelectorAll('div')).indexOf(cell);
+      const cols = grid.style.gridTemplateColumns.split(' ').length;
+
+      // Calculate row and column of clicked cell:
+      // divs in grid: total children count
+      // grid is linear array, rows = total divs / cols
+      const allDivs = Array.from(grid.children);
+      const row = Math.floor(index / cols);
+      const col = index % cols;
+
+      // Helper to get cell by row, col
+      function getCell(r,c) {
+        return allDivs[r*cols + c];
+      }
+
+      // Only proceed if the clicked cell is clickable (skip labels)
+      if (!cell.classList.contains('clickable')) return;
+
+      if(color === 'green') {
+        // For all cells in same row: turn dark red (if clickable)
+        for(let c=0; c < cols; c++) {
+          const targetCell = getCell(row,c);
+          if(targetCell.classList.contains('clickable')) {
+            targetCell.classList.add('red');
+          }
+        }
+        // For all white cells in same column: turn dark red
+        for(let r=0; r < allDivs.length/cols; r++) {
+          if(r === row) continue;
+          const targetCell = getCell(r,col);
+          if(targetCell.classList.contains('clickable') && !targetCell.classList.contains('red') && !targetCell.classList.contains('green') && !targetCell.classList.contains('purple')) {
+            targetCell.classList.add('red');
+          }
+        }
+      } else {
+        // Revert red cells in same row and column to white, but only those that are currently red
+        for(let c=0; c < cols; c++) {
+          const targetCell = getCell(row,c);
+          if(targetCell.classList.contains('clickable') && targetCell.classList.contains('red') && !targetCell.classList.contains('green') && !targetCell.classList.contains('purple')) {
+            targetCell.classList.remove('red');
+          }
+        }
+        for(let r=0; r < allDivs.length/cols; r++) {
+          if(r === row) continue;
+          const targetCell = getCell(r,col);
+          if(targetCell.classList.contains('clickable') && targetCell.classList.contains('red') && !targetCell.classList.contains('green') && !targetCell.classList.contains('purple')) {
+            targetCell.classList.remove('red');
+          }
+        }
+      }
+    }
+
+    // Attach click handlers for all clickable cells
+    document.querySelectorAll('.clickable').forEach(cell => {
+      cell.addEventListener('click', () => cycleColor(cell));
+    });
+
+    // Answer checking
+    const correctAnswers = {
+      who: "Captain Nick",
+      where: "Master Bedroom",
+      envelope: "Green"
+    };
+
+
+    function highlightAnswer(id, isCorrect) {
+      const elem = document.getElementById(id);
+      if (isCorrect) {
+        elem.style.backgroundColor = "#2e7d32";
+        elem.style.color = "white";
+      } else {
+        elem.style.backgroundColor = "#9b1c1c";
+        elem.style.color = "white";
+      }
+    }
+
+    function checkAnswers() {
+      const whoVal = document.getElementById("who-select").value;
+      const whereVal = document.getElementById("where-select").value;
+      const envelopeVal = document.getElementById("envelope-select").value;
+
+      const whoCorrect = whoVal === correctAnswers.who;
+      const whereCorrect = whereVal === correctAnswers.where;
+      const envelopeCorrect = envelopeVal === correctAnswers.envelope;
+
+      highlightAnswer("who-select", whoCorrect);
+      highlightAnswer("where-select", whereCorrect);
+      highlightAnswer("envelope-select", envelopeCorrect);
+
+      const yourTime = document.getElementById("timer-text").textContent;
+      clearInterval(timerInterval);
+
+      if (whoCorrect && whereCorrect && envelopeCorrect) {
+        clearInterval(timerInterval);
+        document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">While Captain Nick protested his innocence, he lost confidence as you explained the case against him, and he knew he was caught. "You cannot do this to me! I will have my revenge!" he exclaimed. You watched him be led away back to his hole, knowing it was the last you would see of him. And that concludes THE CASE OF THE MUDDLED ENVELOPES.</p>';
+      } 
+      else if (whoCorrect && whereCorrect && !envelopeCorrect) {
+          document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">Captain Nick protested that he was being wrongfully convicted and hired, as his expert witness, Inspector Irratino! At the trial, the Inspector told the jury about a sign he had seen in the stars that showed Captain Nick committed the crime in the Master Bedroom, having brought a Green Envelope. When the jury analyzed the case, they discovered that Irratino was correct. You stroke your magnificent eyebrows and thought about what you could do better next time. And that concludes THE CASE OF THE MUDDLED ENVELOPES. </p>';
+      }
+      else if (whoCorrect && !whereCorrect && envelopeCorrect) {
+          document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">Captain Nick protested that he was being wrongfully convicted and hired, as his expert witness, Inspector Irratino! At the trial, the Inspector told the jury about a sign he had seen in the stars that showed Captain Nick committed the crime in the Master Bedroom, having brought a Green Envelope. When the jury analyzed the case, they discovered that Irratino was correct. You stroke your magnificent eyebrows and thought about what you could do better next time. And that concludes THE CASE OF THE MUDDLED ENVELOPES. </p>';
+      }
+      else if (whoCorrect && !whereCorrect && !envelopeCorrect) {
+          document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">Captain Nick protested that he was being wrongfully convicted and hired, as his expert witness, Inspector Irratino! At the trial, the Inspector told the jury about a sign he had seen in the stars that showed Captain Nick committed the crime in the Master Bedroom, having brought a Green Envelope. When the jury analyzed the case, they discovered that Irratino was correct. You stroke your magnificent eyebrows and thought about what you could do better next time. And that concludes THE CASE OF THE MUDDLED ENVELOPES.</p>';
+      }
+      else if (!whoCorrect && whereCorrect && envelopeCorrect) {
+          document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">Your suspect protested that they were being wrongfully convicted and hired, as their expert witness, Inspector Irratino! At the trial, the Inspector told the jury about a sign he had seen in the stars that showed Captain Nick committed the crime in the Master Bedroom, having brought a Green Envelope. When the jury analyzed the case, they discovered that Irratino was correct. You stroke your magnificent eyebrows and thought about what you could do better next time. And that concludes THE CASE OF THE MUDDLED ENVELOPES.</p>';
+      }
+      else if (!whoCorrect && whereCorrect && !envelopeCorrect) {
+          document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">Your suspect protested that they were being wrongfully convicted and hired, as their expert witness, Inspector Irratino! At the trial, the Inspector told the jury about a sign he had seen in the stars that showed Captain Nick committed the crime in the Master Bedroom, having brought a Green Envelope. When the jury analyzed the case, they discovered that Irratino was correct. You stroke your magnificent eyebrows and thought about what you could do better next time. And that concludes THE CASE OF THE MUDDLED ENVELOPES.</p>';
+      }
+      else if (!whoCorrect && !whereCorrect && envelopeCorrect) {
+          document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">Your suspect protested that they were being wrongfully convicted and hired, as their expert witness, Inspector Irratino! At the trial, the Inspector told the jury about a sign he had seen in the stars that showed Captain Nick committed the crime in the Master Bedroom, having brought a Green Envelope. When the jury analyzed the case, they discovered that Irratino was correct. You stroke your magnificent eyebrows and thought about what you could do better next time. And that concludes THE CASE OF THE MUDDLED ENVELOPES.</p>';
+      }
+      else {
+          document.querySelector('.guess-panel button').outerHTML = '<p style="margin-top:1.8rem">Your suspect protested that they were being wrongfully convicted and hired, as their expert witness, Inspector Irratino! At the trial, the Inspector told the jury about a sign he had seen in the stars that showed Captain Nick committed the crime in the Master Bedroom, having brought a Green Envelope. When the jury analyzed the case, they discovered that Irratino was correct. You stroke your magnificent eyebrows and thought about what you could do better next time. And that concludes THE CASE OF THE MUDDLED ENVELOPES.</p>';
+      }
+      alert(`Your time: ${yourTime}`);
+      document.getElementById("who-select").disabled = true; 
+      document.getElementById("where-select").disabled = true;
+      document.getElementById("envelope-select").disabled = true;
+    }
+  </script>
+</body>
+</html>
