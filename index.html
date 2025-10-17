@@ -1,14 +1,32 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
     <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width,initial-scale=1" />
     <title>Hrisika's Website Of Stuff</title>
     <link rel="stylesheet" href="styles.css" />
     <link rel="icon" href="favicon.ico" type="image/x-icon" />
 </head>
 <body>
-    <h1>Hrisika's Website Of Stuff</h1>
-    <p>Welcome to my website! Here you can find various projects and resources. This page is currently empty because I haven't gotten around to making it yet. </p>
-    <button onclick="window.location.href='murdle/'">Play a Murdle Isaiah and I made</button>
+  <header class="hero">
+    <div class="container">
+      <h1>Hrisika's Website Of Stuff</h1>
+      <p class="subtitle">Projects, games and experiments — start with Murdle.</p>
+      <button onclick="window.location.href='murdle/'">Play a Murdle Isaiah and I made</button>
+    </div>
+  </header>
+
+  <main class="container content">
+    <section class="card">
+      <h2>About</h2>
+      <p>This site hosts small projects and experiments. Click the button above to open the Murdle game created with Isaiah.</p>
+    </section>
+  </main>
+
+  <footer class="site-footer">
+    <div class="container">
+      <small>&copy; 2025 Hrisika — <a href="https://github.com/hrisikaj/hrisikaj.github.io" target="_blank" rel="noopener">Source</a></small>
+    </div>
+  </footer>
 </body>
 </html>
